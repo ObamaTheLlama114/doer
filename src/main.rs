@@ -9,7 +9,7 @@ mod build;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Path to build.toml
-    #[arg(short = 'f', long = "build-file")]
+    #[arg(short = 'f', long = "file")]
     build_file: Option<String>,
 
     /// Command to run

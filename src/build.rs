@@ -15,6 +15,7 @@ struct SerdeStep {
     env: Option<HashMap<String, String>>,
     #[serde(rename = "async")]
     asynch: Option<bool>,
+    #[serde(rename = "depends")]
     dependencies: Option<Vec<String>>,
     in_order: Option<bool>,
 }
