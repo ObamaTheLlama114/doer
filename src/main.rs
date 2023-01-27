@@ -48,16 +48,14 @@ async fn run_step(step: build::Step) -> Result<(), Error> {
             println!("Error: {}", error);
             std::process::exit(1);
         }
-        if let Ok(result) = result {
-            if let Err(error) = result {
-                println!("Error: {}", error);
-                std::process::exit(1);
-            }
+        if let Ok(Err(error)) = result {
+            println!("Error: {}", error);
+            std::process::exit(1);
         }
     }
 
     // Run command
-    if let Some(command) = &step.command {
+    for command in &step.command {
         let dir = step.dir.clone();
         let dir = std::path::Path::new(&dir)
             .canonicalize()

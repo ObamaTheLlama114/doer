@@ -17,8 +17,15 @@ enum SerdeDependency {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+#[serde(untagged)]
+enum SerdeCommand {
+    String(String),
+    Array(Vec<String>),
+}
+
+#[derive(Debug, Deserialize, Clone)]
 struct SerdeStep {
-    command: Option<String>,
+    command: Option<SerdeCommand>,
     env: Option<HashMap<String, String>>,
     #[serde(rename = "async")]
     asynch: Option<bool>,
@@ -29,7 +36,7 @@ struct SerdeStep {
 
 #[derive(Debug, Clone)]
 pub struct Step {
-    pub command: Option<String>,
+    pub command: Vec<String>,
     pub env: HashMap<String, String>,
     pub dir: String,
     pub asynch: bool,
@@ -138,6 +145,12 @@ fn generate_step(
     files: &mut HashMap<String, SerdeBuild>,
 ) -> Result<Step> {
     // Generate a usable step from a deserialized step
+    let command = match &step.command {
+        Some(SerdeCommand::String(x)) => vec![x.to_string()],
+        Some(SerdeCommand::Array(x)) => x.clone(),
+        None => vec![],
+    };
+
     let dependencies = match &step.dependencies {
         Some(SerdeDependency::String(x)) => Some(vec![x.to_string()]),
         Some(SerdeDependency::Array(x)) => Some(x.clone()),
@@ -145,7 +158,7 @@ fn generate_step(
     };
 
     Ok(Step {
-        command: step.command.clone(),
+        command,
         env: step.env.clone().unwrap_or_default(),
         dir: path.to_string(),
         asynch: step.asynch.unwrap_or(false),
