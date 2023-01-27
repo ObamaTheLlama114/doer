@@ -42,6 +42,26 @@ command = "cargo build"
 
 This will run `cargo run` when the `run` step is run, and `cargo build` when the `build` step is run.
 
+### Default step
+
+The default step is the step that will be run if no step is specified. By default, this is the `default` step. \
+Example:
+
+```toml
+[step.default]
+command = "echo 'Hello, world!'"
+```
+
+This will run `echo 'Hello, world!'` by default. If you want to change the default step, you can use the `default` key in the `build.toml` file.\
+Example:
+
+```toml
+default = "build"
+
+[step.build]
+command = "cargo build"
+```
+
 ### Dependencies
 
 Steps can depend on other steps by using the `depends` key.\
