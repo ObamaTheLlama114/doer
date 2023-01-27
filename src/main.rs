@@ -43,7 +43,17 @@ async fn run_step(step: build::Step) -> Result<(), Error> {
 
     // Wait for async dependencies
     for handle in handles {
-        handle.await.unwrap();
+        let result = handle.await;
+        if let Err(error) = &result {
+            println!("Error: {}", error);
+            std::process::exit(1);
+        }
+        if let Ok(result) = result {
+            if let Err(error) = result {
+                println!("Error: {}", error);
+                std::process::exit(1);
+            }
+        }
     }
 
     // Run command
