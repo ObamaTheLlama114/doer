@@ -1,29 +1,19 @@
 use std::io::Error;
 
 use async_recursion::async_recursion;
-use clap::Parser;
+use clap::{command, Arg};
 
 mod build;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Path to build.toml
-    #[arg(short = 'f', long = "file")]
-    build_file: Option<String>,
-
-    /// Command to run
-    #[arg(short = 's', long = "step")]
-    step: Option<String>,
-}
-
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
-    let step = build::get_step(
-        args.step,
-        &args.build_file.unwrap_or_else(|| ".".to_string()),
-    );
+    let matches = command!()
+        .arg(Arg::new("step"))
+        .arg(Arg::new("build_file").short('f').long("file"))
+        .get_matches();
+    let step = matches.get_one::<String>("step").cloned();
+    let build_file = matches.get_one::<String>("build_file").cloned();
+    let step = build::get_step(step, &build_file.unwrap_or_else(|| ".".to_string()));
     match step {
         Ok(step) => run_step(step).await.unwrap(),
         Err(error) => {
@@ -45,7 +35,7 @@ async fn run_step(step: build::Step) -> Result<(), Error> {
     // Run dependencies
     for dependency in &step.dependencies {
         if dependency.asynch && !step.in_order {
-            handles.push(run_step(dependency.clone()));
+            handles.push(tokio::spawn(run_step(dependency.clone())));
         } else {
             run_step(dependency.clone()).await?;
         }

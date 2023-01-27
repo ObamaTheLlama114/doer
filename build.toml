@@ -1,0 +1,35 @@
+[step.default]
+depends = [
+    "format",
+    "test",
+    "lint",
+]
+
+[step.format]
+command = "cargo fmt"
+
+[step.test]
+command = "cargo test"
+
+[step.lint]
+command = "cargo clippy"
+
+[step.fix]
+command = "cargo fix"
+
+[step.build-all]
+depends = [
+    "build",
+    "release",
+]
+
+[step.build]
+command = "cargo build"
+async = true
+
+[step.release]
+command = "cargo build --release"
+async = true
+
+[step.install]
+command = "cargo install --path ."

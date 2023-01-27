@@ -111,8 +111,12 @@ fn get_step_inner(
         if let Some(step) = step {
             generate_step(step, path, files)
         } else {
-            let path = get_child_path(path, step_name[0])?;
-            get_step_inner(None, &path, files)
+            let path = get_child_path(path, step_name[0]);
+            if let Ok(path) = path {
+                get_step_inner(None, &path, files)
+            } else {
+                Err(BuildError::MissingStep(step_name.join("::")))
+            }
         }
     } else {
         // If step name is multiple parts, get child build file and get step from that
