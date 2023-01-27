@@ -1,17 +1,21 @@
 # Doer
 
 <div>
+    <!-- build -->
+    <a href="https://github.com/obamathellama114/doer">
+        <img src="https://img.shields.io/github/actions/workflow/status/obamathellama114/doer/rust.yml?style=flat-square"/>
+    </a>
+    <!-- License -->
+    <a href="">
+        <img src="https://img.shields.io/crates/l/doer?style=flat-square">
+    </a>
     <!-- Version -->
     <a href="https://crates.io/crates/doer">
-        <img src="https://img.shields.io/crates/v/doer?style=for-the-badge"/>
+        <img src="https://img.shields.io/crates/v/doer?style=flat-square"/>
     </a>
     <!-- Downloads -->
     <a href="https://crates.io/crates/doer">
-        <img src="https://img.shields.io/crates/d/doer?style=for-the-badge"/>
-    </a>
-    <!-- build -->
-    <a href="https://github.com/obamathellama114/doer">
-        <img src="https://img.shields.io/github/actions/workflow/status/obamathellama114/doer/rust.yml?style=for-the-badge"/>
+        <img src="https://img.shields.io/crates/d/doer?style=flat-square"/>
     </a>
 </div>
 
