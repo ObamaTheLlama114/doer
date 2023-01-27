@@ -2,9 +2,17 @@
 
 <div>
     <!-- Version -->
-    <img src="https://img.shields.io/crates/v/doer"/>
+    <a href="https://crates.io/crates/doer">
+        <img src="https://img.shields.io/crates/v/doer?style=for-the-badge"/>
+    </a>
     <!-- Downloads -->
-    <img src="https://img.shields.io/crates/d/doer"/>
+    <a href="https://crates.io/crates/doer">
+        <img src="https://img.shields.io/crates/d/doer?style=for-the-badge"/>
+    </a>
+    <!-- build -->
+    <a href="https://github.com/obamathellama114/doer">
+        <img src="https://img.shields.io/github/actions/workflow/status/obamathellama114/doer/rust.yml?style=for-the-badge"/>
+    </a>
 </div>
 
 Doer is simple task runner that uses the TOML file format for configuration.
