@@ -10,8 +10,7 @@ license = "MIT"
 keywords = ["cli", "parallel", "commands"]
 categories = ["command-line-utilities"]
 
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+include = ["src/**/*", "Cargo.toml", "README.md"]
 
 [dependencies]
 async-recursion = "1.0.2"
