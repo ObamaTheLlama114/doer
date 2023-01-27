@@ -45,27 +45,22 @@ pub fn get_step(step_name: Option<String>, path: &str) -> Step {
         std::process::exit(1);
     });
 
-    let step_name = step_name.unwrap_or(
-        // If no step name is provided, get default step name from build file or use "default" if it exists
-        build
-            .default
-            .clone()
-            .unwrap_or_else(|| {
-                if build
-                    .step
-                    .as_ref()
-                    .unwrap_or(&HashMap::new())
-                    .contains_key("default")
-                {
-                    "default".to_string()
-                } else {
-                    println!("No default step found");
-                    std::process::exit(1)
-                }
-            })
-            .to_string(),
-    );
-    files.insert(path.to_string(), build.clone());
+    let step_name = step_name.unwrap_or_else(|| {
+        build.default.clone().unwrap_or_else(|| {
+            if build
+                .step
+                .as_ref()
+                .unwrap_or(&HashMap::new())
+                .contains_key("default")
+            {
+                "default".to_string()
+            } else {
+                println!("No default step found");
+                std::process::exit(1)
+            }
+        })
+    });
+    files.insert(path.to_string(), build);
     get_step_inner(&step_name, &path, &mut files)
 }
 
@@ -89,13 +84,13 @@ fn get_step_inner(step_name: &str, path: &str, files: &mut HashMap<String, Serde
     let step_name = step_name.split(':').collect::<Vec<&str>>();
 
     // Check if step name is valid
-    if step_name.len() == 0 {
+    if step_name.is_empty() {
         println!("Step name is empty");
         std::process::exit(1);
     }
     if step_name.len() == 1 {
         // If step name is only one part, get step from current build file
-        let step = build_file.step.unwrap_or_else(HashMap::new);
+        let step = build_file.step.unwrap_or_default();
         let step = step.get(step_name[0]).unwrap_or_else(|| {
             println!(
                 "Step not found in file:\nstep: {}\nfile: {}",
@@ -190,7 +185,7 @@ fn get_child_path(path: &str, child: &str) -> String {
         });
 
     if path.is_dir() {
-        PathBuf::from(path.clone())
+        path.clone()
             .join("build.toml")
             .canonicalize()
             .unwrap_or_else(|_| {
