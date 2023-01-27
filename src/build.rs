@@ -32,6 +32,7 @@ struct SerdeStep {
     #[serde(rename = "depends")]
     dependencies: Option<SerdeDependency>,
     in_order: Option<bool>,
+    quiet: Option<bool>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +43,7 @@ pub struct Step {
     pub asynch: bool,
     pub dependencies: Vec<Step>,
     pub in_order: bool,
+    pub quiet: bool,
 }
 
 #[derive(Debug)]
@@ -164,6 +166,7 @@ fn generate_step(
         asynch: step.asynch.unwrap_or(false),
         dependencies: generate_dependencies(dependencies, files, path)?,
         in_order: step.in_order.unwrap_or(false),
+        quiet: step.quiet.unwrap_or(false),
     })
 }
 

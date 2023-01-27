@@ -82,12 +82,12 @@ async fn run_step(step: build::Step, quiet: bool) -> Result<(), Error> {
             .arg("-c")
             .arg(command)
             .current_dir(dir)
-            .stdout(if quiet {
+            .stdout(if quiet || step.quiet {
                 std::process::Stdio::null()
             } else {
                 std::process::Stdio::inherit()
             })
-            .stderr(if quiet {
+            .stderr(if quiet || step.quiet {
                 std::process::Stdio::null()
             } else {
                 std::process::Stdio::inherit()
