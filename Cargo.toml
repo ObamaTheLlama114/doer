@@ -7,7 +7,7 @@ description = "A simple CLI tool to run commands in parallel"
 repository = "https://github.com/ObamaTheLlama114/doer"
 readme = "README.md"
 license = "MIT"
-keywords = ["cli", "parallel", "commands"]
+keywords = ["cli", "parallel", "commands", "doer", "runner"]
 categories = ["command-line-utilities"]
 
 include = ["src/**/*", "Cargo.toml", "README.md"]
