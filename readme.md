@@ -10,7 +10,29 @@ cargo install doer
 
 ## Usage
 
-By default, Doer will run the `default` task. This can be changed with the `--task` option, or with the `default` key in the `build.toml` file.
+By default, Doer will run the `default` step.\
+Example:
+
+```bash
+doer
+```
+
+This will run the `default` step. This can be changed by passing in a different step, or with the `default` key in the `build.toml` file.\
+Example:
+
+```bash
+doer build
+```
+
+This will run the `build` step.\
+You can also pass in a different file to use for configuration.\
+Example:
+
+```bash
+doer --file build.toml build
+```
+
+This will run the `build` step in the `build.toml` file.
 
 ## Configuration
 
