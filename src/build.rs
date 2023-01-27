@@ -80,7 +80,7 @@ fn get_step_inner(
     let build_file = load_file(path, files)?;
 
     let step_name = match step_name {
-        Some(step_name) => step_name.to_string(),
+        Some(step_name) => step_name,
         None => match build_file.default {
             Some(step_name) => step_name,
             None => {
@@ -196,7 +196,7 @@ fn get_full_path(path: &str) -> Result<String> {
     let mut path = PathBuf::from(path)
         .canonicalize()?
         .to_str()
-        .ok_or(BuildError::InvalidPath(path.to_owned()))?
+        .ok_or_else(|| BuildError::InvalidPath(path.to_owned()))?
         .to_string();
 
     // Add build file name if not already there
@@ -210,19 +210,22 @@ fn get_child_path(path: &str, child: &str) -> Result<String> {
     // Get path to child build file
     let path_buf = PathBuf::from(path)
         .parent() // Remove build file from path
-        .ok_or(BuildError::InvalidPath(path.to_owned()))?
+        .ok_or_else(|| BuildError::InvalidPath(path.to_owned()))?
         .join(child)
         .canonicalize()?;
 
     // Add build file name if not already there
     if path_buf.is_dir() {
-        Ok(path_buf.clone()
+        Ok(path_buf
             .join("build.toml")
             .canonicalize()?
-            .to_str().ok_or(BuildError::InvalidPath(path.to_owned()))?
+            .to_str()
+            .ok_or_else(|| BuildError::InvalidPath(path.to_owned()))?
             .to_string())
     } else {
-        Ok(path_buf.to_str().ok_or(BuildError::InvalidPath(path.to_owned()))?
+        Ok(path_buf
+            .to_str()
+            .ok_or_else(|| BuildError::InvalidPath(path.to_owned()))?
             .to_string())
     }
 }

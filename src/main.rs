@@ -20,7 +20,10 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    let step = build::get_step(args.step, &args.build_file.unwrap_or_else(|| ".".to_string()));
+    let step = build::get_step(
+        args.step,
+        &args.build_file.unwrap_or_else(|| ".".to_string()),
+    );
     match step {
         Ok(step) => run_step(step).await.unwrap(),
         Err(error) => {
