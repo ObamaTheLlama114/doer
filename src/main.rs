@@ -9,8 +9,8 @@ mod build;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Path to build.toml
-    #[arg(short = 'f', long = "build-file", default_value = "build.toml")]
-    build_file: String,
+    #[arg(short = 'f', long = "build-file")]
+    build_file: Option<String>,
 
     /// Command to run
     #[arg(short = 's', long = "step")]
@@ -20,8 +20,20 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    let step = build::get_step(args.step, &args.build_file);
-    run_step(step).await.unwrap();
+    let step = build::get_step(args.step, &args.build_file.unwrap_or_else(|| ".".to_string()));
+    match step {
+        Ok(step) => run_step(step).await.unwrap(),
+        Err(error) => {
+            match error {
+                build::BuildError::IoError(error) => println!("{}", error),
+                build::BuildError::TomlError(error) => println!("{}", error),
+                build::BuildError::MissingStep(step) => println!("Step not found: {}", step),
+                build::BuildError::InvalidPath(path) => println!("Invalid build.toml: {}", path),
+                build::BuildError::InvalidStep(step) => println!("Invalid step name: {}", step),
+            };
+            std::process::exit(1)
+        }
+    };
 }
 
 #[async_recursion]
