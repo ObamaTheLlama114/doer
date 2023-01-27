@@ -2,6 +2,14 @@
 name = "doer"
 version = "0.1.0"
 edition = "2021"
+authors = ["Bama"]
+description = "A simple CLI tool to run commands in parallel"
+repository = "https://github.com/ObamaTheLlama114/doer"
+readme = "README.md"
+license = "MIT"
+keywords = ["cli", "parallel", "commands"]
+categories = ["command-line-utilities"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
