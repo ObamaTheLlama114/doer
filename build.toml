@@ -22,6 +22,7 @@ depends = [
 [step.build]
 command = "cargo build"
 async = true
+quiet = true
 
 [step.release]
 command = "cargo build --release"
