@@ -1,18 +1,14 @@
 [step.default]
 depends = [
-    "format",
     "test",
     "lint",
 ]
-
-[step.format]
-command = "cargo fmt"
 
 [step.test]
 command = "cargo test"
 
 [step.lint]
-command = "cargo clippy"
+command = ["cargo fmt", "cargo clippy"]
 
 [step.fix]
 command = "cargo fix"
@@ -26,6 +22,7 @@ depends = [
 [step.build]
 command = "cargo build"
 async = true
+quiet = true
 
 [step.release]
 command = "cargo build --release"
