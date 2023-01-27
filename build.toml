@@ -1,6 +1,5 @@
 [step.default]
 depends = [
-    "format",
     "test",
     "lint",
 ]
