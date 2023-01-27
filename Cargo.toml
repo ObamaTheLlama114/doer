@@ -1,6 +1,6 @@
 [package]
 name = "doer"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Bama"]
 description = "A simple CLI tool to run commands in parallel"
