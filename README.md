@@ -1,5 +1,12 @@
 # Doer
 
+<div>
+    <!-- Version -->
+    <img src="https://img.shields.io/crates/v/doer"/>
+    <!-- Downloads -->
+    <img src="https://img.shields.io/crates/d/doer"/>
+</div>
+
 Doer is simple task runner that uses the TOML file format for configuration.
 
 ## Installation
