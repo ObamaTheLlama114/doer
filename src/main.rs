@@ -1,12 +1,14 @@
-use std::io::Error;
+use std::path::PathBuf;
 
 use async_recursion::async_recursion;
+use build::BuildError;
 use clap::{command, Arg, ArgAction};
 
 mod build;
+mod cache;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), BuildError> {
     let matches = command!()
         .arg(Arg::new("step").help("Step to run"))
         .arg(
@@ -24,77 +26,125 @@ async fn main() {
         )
         .get_matches();
     let step = matches.get_one::<String>("step").cloned();
+    let cache = cache::load_cache(step.clone()).await.unwrap();
     let build_file = matches.get_one::<String>("build_file").cloned();
     let quiet = matches.get_flag("quiet");
-    let step = build::get_step(step, &build_file.unwrap_or_else(|| ".".to_string()));
-    match step {
-        Ok(step) => run_step(step, quiet).await.unwrap(),
-        Err(error) => {
-            match error {
-                build::BuildError::IoError(error) => println!("{}", error),
-                build::BuildError::TomlError(error) => println!("{}", error),
-                build::BuildError::MissingStep(step) => println!("Step not found: {}", step),
-                build::BuildError::InvalidPath(path) => println!("Invalid build.toml: {}", path),
-                build::BuildError::InvalidStep(step) => println!("Invalid step name: {}", step),
-            };
-            std::process::exit(1)
-        }
-    };
+    let step = build::get_step(step, &build_file.unwrap_or_else(|| ".".to_string()))?;
+    run_step(step, quiet, cache.last_run).await?;
+    Ok(())
 }
 
 #[async_recursion]
-async fn run_step(step: build::Step, quiet: bool) -> Result<(), Error> {
+async fn run_step(
+    step: build::Step,
+    quiet: bool,
+    last_run: Option<u64>,
+) -> Result<bool, BuildError> {
     let mut handles = vec![];
     // Run dependencies
     for dependency in &step.dependencies {
         if dependency.asynch && !step.in_order {
-            handles.push(tokio::spawn(run_step(dependency.clone(), quiet)));
+            handles.push(tokio::spawn(run_step(dependency.clone(), quiet, last_run)));
         } else {
-            run_step(dependency.clone(), quiet).await?;
+            run_step(dependency.clone(), quiet, last_run).await?;
         }
     }
 
-    // Wait for async dependencies
+    let mut ran_steps = vec![];
+
     for handle in handles {
-        let result = handle.await;
-        if let Err(error) = &result {
-            println!("Error: {}", error);
-            std::process::exit(1);
-        }
-        if let Ok(Err(error)) = result {
-            println!("Error: {}", error);
-            std::process::exit(1);
+        ran_steps.push(handle.await??);
+    }
+
+    // Check if all dependencies have been skipped
+    if !ran_steps.iter().any(|ran_step| *ran_step) {
+        // Return false if step is watching files and none of them have changed
+        if let Some(file_list) = &step.watch {
+            if !watch(file_list.clone(), step.dir.clone(), last_run).await? {
+                return Ok(false);
+            }
         }
     }
 
     // Run command
     for command in &step.command {
+        let out = || {
+            if quiet || step.quiet {
+                std::process::Stdio::null()
+            } else {
+                std::process::Stdio::inherit()
+            }
+        };
         let dir = step.dir.clone();
         let dir = std::path::Path::new(&dir)
-            .canonicalize()
-            .expect("Could not canonicalize path")
+            .canonicalize()?
             .parent()
-            .expect("Could not get parent")
+            .ok_or(BuildError::InvalidPath(dir.clone()))?
             .to_str()
-            .expect("Could not convert path to string")
+            .ok_or(BuildError::InvalidPath(dir.clone()))?
             .to_string();
         tokio::process::Command::new("sh")
             .arg("-c")
             .arg(command)
             .current_dir(dir)
-            .stdout(if quiet || step.quiet {
-                std::process::Stdio::null()
-            } else {
-                std::process::Stdio::inherit()
-            })
-            .stderr(if quiet || step.quiet {
-                std::process::Stdio::null()
-            } else {
-                std::process::Stdio::inherit()
-            })
+            .stdout(out())
+            .stderr(out())
             .spawn()?
             .wait()
             .await?;
     }
-    Ok(())
+    Ok(true)
+}
+
+async fn watch(
+    file_list: Vec<String>,
+    dir: String,
+    last_run: Option<u64>,
+) -> Result<bool, BuildError> {
+    let dir = if dir.ends_with("build.toml") {
+        dir.replace("build.toml", "")
+    } else {
+        dir
+    };
+    let Some(last_run) = last_run else {
+        return Ok(true);
+    };
+    for file in file_list {
+        let file = std::path::Path::new(&dir)
+            .join(file.clone())
+            .canonicalize()?;
+        let files = get_files_in_dir(file)?;
+        for file in files {
+            let metadata = std::fs::metadata(file).unwrap();
+            let modified = metadata
+                .modified()?
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_secs();
+
+            // Return true if any file has been modified since last run
+            if modified > last_run {
+                return Ok(true);
+            }
+        }
+    }
+    Ok(false)
+}
+
+fn get_files_in_dir(dir: PathBuf) -> Result<Vec<PathBuf>, BuildError> {
+    if !dir.is_dir() {
+        return Ok(vec![dir]);
+    }
+    let mut files = vec![];
+
+    for file in dir.read_dir()? {
+        let file = file?;
+        let file = file.path();
+        if file.is_dir() {
+            files.append(&mut get_files_in_dir(file)?);
+        } else {
+            files.push(file);
+        }
+    }
+
+    Ok(files)
 }

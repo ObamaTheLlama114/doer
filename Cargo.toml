@@ -16,5 +16,5 @@ include = ["src/**/*", "Cargo.toml", "README.md"]
 async-recursion = "1.0.2"
 clap = { version = "4.1.4", features = ["cargo"] }
 serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.24.2", features = ["macros", "process", "rt-multi-thread"] }
+tokio = { version = "1.24.2", features = ["macros", "process", "rt-multi-thread", "fs", "time", "io-util"] }
 toml = "0.6.0"
