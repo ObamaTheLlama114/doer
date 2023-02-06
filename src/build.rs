@@ -33,6 +33,7 @@ struct SerdeStep {
     dependencies: Option<SerdeDependency>,
     in_order: Option<bool>,
     quiet: Option<bool>,
+    watch: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -44,12 +45,16 @@ pub struct Step {
     pub dependencies: Vec<Step>,
     pub in_order: bool,
     pub quiet: bool,
+    pub watch: Option<Vec<String>>,
 }
 
 #[derive(Debug)]
 pub enum BuildError {
     IoError(std::io::Error),
     TomlError(toml::de::Error),
+    JoinError(tokio::task::JoinError),
+    ParseIntError(std::num::ParseIntError),
+    SystemTimeError(std::time::SystemTimeError),
     MissingStep(String),
     InvalidPath(String),
     InvalidStep(String),
@@ -67,15 +72,21 @@ impl From<toml::de::Error> for BuildError {
     }
 }
 
-impl Clone for BuildError {
-    fn clone(&self) -> Self {
-        match self {
-            BuildError::IoError(error) => BuildError::IoError(std::io::Error::from(error.kind())),
-            BuildError::TomlError(error) => BuildError::TomlError(error.clone()),
-            BuildError::MissingStep(x) => BuildError::MissingStep(x.to_string()),
-            BuildError::InvalidPath(x) => BuildError::InvalidPath(x.to_string()),
-            BuildError::InvalidStep(x) => BuildError::InvalidStep(x.to_string()),
-        }
+impl From<tokio::task::JoinError> for BuildError {
+    fn from(error: tokio::task::JoinError) -> Self {
+        BuildError::JoinError(error)
+    }
+}
+
+impl From<std::num::ParseIntError> for BuildError {
+    fn from(error: std::num::ParseIntError) -> Self {
+        BuildError::ParseIntError(error)
+    }
+}
+
+impl From<std::time::SystemTimeError> for BuildError {
+    fn from(error: std::time::SystemTimeError) -> Self {
+        BuildError::SystemTimeError(error)
     }
 }
 
@@ -167,6 +178,7 @@ fn generate_step(
         dependencies: generate_dependencies(dependencies, files, path)?,
         in_order: step.in_order.unwrap_or(false),
         quiet: step.quiet.unwrap_or(false),
+        watch: step.watch.clone(),
     })
 }
 
@@ -189,13 +201,8 @@ fn generate_dependencies(
                     get_step_inner(Some(x[1].to_string()), &path, files)
                 }
             })
-            .collect::<Vec<Result<Step>>>();
-        for dependency in &dependencies {
-            if let Err(e) = dependency {
-                return Err(e.clone());
-            }
-        }
-        Ok(dependencies.into_iter().map(|x| x.unwrap()).collect())
+            .collect::<Result<Vec<Step>>>()?;
+        Ok(dependencies)
     } else {
         // If no dependencies, return empty vector
         Ok(Vec::new())

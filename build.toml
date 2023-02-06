@@ -23,10 +23,12 @@ depends = [
 command = "cargo build"
 async = true
 quiet = true
+watch = ["src", "Cargo.toml", "Cargo.lock"]
 
 [step.release]
 command = "cargo build --release"
 async = true
+watch = ["src", "Cargo.toml", "Cargo.lock"]
 
 [step.install]
 command = "cargo install --path ."
